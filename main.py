@@ -1,3 +1,4 @@
+"""Password Validator"""
 from abc import ABC, abstractmethod
 from string import digits, punctuation, ascii_uppercase, ascii_lowercase
 from hashlib import sha1
@@ -85,18 +86,32 @@ class LengthValidator(Validator):
 
 class Have_I_been_Pwd_Validator(Validator):
     """Check leak password in network: password (str) """
+
     def __init__(self, password: str):
+        """
+
+        :param password: password
+        :type password: str
+        """
         self.password = password
         self.url = 'https://api.pwnedpasswords.com/range/'
+# https://api.pwnedpasswords.com/range/67504 self.url+password[:5]
 
     def is_valid(self):
+        """
+
+        :return: raises or True
+        :rtype:
+        """
         password = sha1(self.password.encode('utf-8')).hexdigest().upper()
-        responce = get(self.url+password[:5]).text.splitlines()
-        for single_responce in responce:
-            hash = single_responce.split(':')[0]
-            numbers_of_leaks = single_responce.split(':')[1]
+        response = get(self.url+password[:5], timeout=2).text.splitlines()
+        for single_response in response:
+            hash = single_response.split(':')[0]
+            numbers_of_leaks = single_response.split(':')[1]
             if hash == password[5:]:
                 raise WeakPassword(f'Yours password has been leaked {numbers_of_leaks} times.')
+            else:
+                return True
 
 
 class PasswordValidator(Validator):
@@ -121,15 +136,21 @@ class PasswordValidator(Validator):
             if all(self.check_rules):
                 print(self.password)
                 raise StrongPassword('Password is strong')
+
+
 class LoadPassword:
+    """Load password from file"""
     def __init__(self):
         self.passwords = str
-        self.path_passowrd = 'Fake password.txt'
+        self.path_password = 'Fake password.txt'
         self.path_validate_password = 'Validate password.txt'
         self.get()
+
     def get(self):
-        with open(self.path_passowrd,'r') as readfile, open(self.path_validate_password,'a') as validateFile:
-           # validateFile.truncate(0)
+        """method get password from file"""
+        with open(self.path_password, 'r', encoding='utf-8') as readfile, open(self.path_validate_password, 'a',
+                                                                               encoding='utf-8') as validate_file:
+            validate_file.truncate(0)
             self.passwords = readfile.readlines()
 
             for password in self.passwords:
@@ -141,11 +162,10 @@ class LoadPassword:
                     print(f'{password}  ' + str(msg))
                     print('_________________')
 
-                except StrongPassword as msg:
+                except StrongPassword:
                     print(f'Password {password} is strong.')
-                    validateFile.writelines(f'Password: {password} is strong.')
-
+                    validate_file.writelines(f'Password: {password} is strong.')
 
 
 if __name__ == '__main__':
-    LoadPassword()
+    Have_I_been_Pwd_Validator('Adamo').is_valid()
