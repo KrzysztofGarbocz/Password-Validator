@@ -1,6 +1,6 @@
 from main import HasNumberValidator, WeakPassword, \
     HasSpecialCharactersValidator, HasUpperCharactersValidator, \
-    HasLowerCharacterValidator, LengthValidator, Have_I_been_Pwd_Validator
+    HasLowerCharacterValidator, LengthValidator, HaveIbeenPwdValidator
 import pytest
 
 
@@ -62,7 +62,7 @@ def test_have_i_been_pwd_validator_dont_find(requests_mock):
 #   675040F865345FA218494E476477418735135CE4 -> 'Adamo'
     data = '00232BC8113BA387E082179F8212DF7FEAF:2\n\r037001F472ECEF25640E1592C1A550927D2:8'
     requests_mock.get('https://api.pwnedpasswords.com/range/67504', text=data)
-    assert Have_I_been_Pwd_Validator('Adamo').is_valid() is True
+    assert HaveIbeenPwdValidator('Adamo').is_valid() is True
 
 
 def test_have_i_been_pwd_validator_find(requests_mock):
@@ -70,7 +70,7 @@ def test_have_i_been_pwd_validator_find(requests_mock):
     data = '0F865345FA218494E476477418735135CE4:9\n\r00232BC8113BA387E082179F8212DF7FEAF:2'
     requests_mock.get('https://api.pwnedpasswords.com/range/67504', text=data)
     with pytest.raises(WeakPassword) as msg:
-        Have_I_been_Pwd_Validator('Adamo').is_valid()
+        HaveIbeenPwdValidator('Adamo').is_valid()
         assert msg == 'Yours password has been leaked 9 times.'
 
 

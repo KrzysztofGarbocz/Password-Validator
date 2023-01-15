@@ -21,7 +21,7 @@ class Validator(ABC):
 
     @abstractmethod
     def is_valid(self):
-        pass
+        """valid interface"""
 
 
 class HasNumberValidator(Validator):
@@ -32,8 +32,7 @@ class HasNumberValidator(Validator):
     def is_valid(self):
         if any([True for char in self.password if char in digits]):
             return True
-        else:
-            raise WeakPassword('Password dont have number')
+        raise WeakPassword('Password dont have number')
 
 
 class HasSpecialCharactersValidator(Validator):
@@ -44,8 +43,7 @@ class HasSpecialCharactersValidator(Validator):
     def is_valid(self):
         if any([True for char in self.password if char in punctuation]):
             return True
-        else:
-            raise WeakPassword('Password dont have special character')
+        raise WeakPassword('Password dont have special character')
 
 
 class HasUpperCharactersValidator(Validator):
@@ -56,8 +54,7 @@ class HasUpperCharactersValidator(Validator):
     def is_valid(self):
         if any([True for char in self.password if char in ascii_uppercase]):
             return True
-        else:
-            raise WeakPassword('Password dont have upper character')
+        raise WeakPassword('Password dont have upper character')
 
 
 class HasLowerCharacterValidator(Validator):
@@ -68,8 +65,7 @@ class HasLowerCharacterValidator(Validator):
     def is_valid(self):
         if any([True for char in self.password if char in ascii_lowercase]):
             return True
-        else:
-            raise WeakPassword('Password dont have lower character')
+        raise WeakPassword('Password dont have lower character')
 
 
 class LengthValidator(Validator):
@@ -80,11 +76,10 @@ class LengthValidator(Validator):
     def is_valid(self):
         if len(self.password) < 8:
             raise WeakPassword('Too short password')
-        else:
-            return True
+        return True
 
 
-class Have_I_been_Pwd_Validator(Validator):
+class HaveIbeenPwdValidator(Validator):
     """Check leak password in network: password (str) """
 
     def __init__(self, password: str):
@@ -106,12 +101,11 @@ class Have_I_been_Pwd_Validator(Validator):
         password = sha1(self.password.encode('utf-8')).hexdigest().upper()
         response = get(self.url+password[:5], timeout=2).text.splitlines()
         for single_response in response:
-            hash = single_response.split(':')[0]
+            hash_password = single_response.split(':')[0]
             numbers_of_leaks = single_response.split(':')[1]
-            if hash == password[5:]:
+            if hash_password == password[5:]:
                 raise WeakPassword(f'Yours password has been leaked {numbers_of_leaks} times.')
-            else:
-                return True
+            return True
 
 
 class PasswordValidator(Validator):
@@ -125,7 +119,7 @@ class PasswordValidator(Validator):
             HasSpecialCharactersValidator,
             HasUpperCharactersValidator,
             HasLowerCharacterValidator,
-            Have_I_been_Pwd_Validator
+            HaveIbeenPwdValidator
         ]
 
     def is_valid(self):
@@ -148,8 +142,8 @@ class LoadPassword:
 
     def get(self):
         """method get password from file"""
-        with open(self.path_password, 'r', encoding='utf-8') as readfile, open(self.path_validate_password, 'a',
-                                                                               encoding='utf-8') as validate_file:
+        with open(self.path_password, 'r', encoding='utf-8') as readfile, \
+                open(self.path_validate_password, 'a', encoding='utf-8') as validate_file:
             validate_file.truncate(0)
             self.passwords = readfile.readlines()
 
@@ -168,4 +162,4 @@ class LoadPassword:
 
 
 if __name__ == '__main__':
-    Have_I_been_Pwd_Validator('Adamo').is_valid()
+    HaveIbeenPwdValidator('Adamo').is_valid()
