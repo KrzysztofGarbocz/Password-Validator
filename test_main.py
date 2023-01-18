@@ -60,14 +60,14 @@ def test_negative_length_char_validator():
 
 def test_have_i_been_pwd_validator_dont_find(requests_mock):
 #   675040F865345FA218494E476477418735135CE4 -> 'Adamo'
-    data = '00232BC8113BA387E082179F8212DF7FEAF:2\n\r037001F472ECEF25640E1592C1A550927D2:8'
+    data = '00232BC8113BA387E082179F8212DF7FEAF:2\n037001F472ECEF25640E1592C1A550927D2:8'
     requests_mock.get('https://api.pwnedpasswords.com/range/67504', text=data)
     assert HaveIbeenPwdValidator('Adamo').is_valid() is True
 
 
 def test_have_i_been_pwd_validator_find(requests_mock):
 #   675040F865345FA218494E476477418735135CE4 -> 'Adamo'
-    data = '0F865345FA218494E476477418735135CE4:9\n\r00232BC8113BA387E082179F8212DF7FEAF:2'
+    data = '00232BC8113BA387E082179F8212DF7FEAF:2\n0F865345FA218494E476477418735135CE4:9'
     requests_mock.get('https://api.pwnedpasswords.com/range/67504', text=data)
     with pytest.raises(WeakPassword) as msg:
         HaveIbeenPwdValidator('Adamo').is_valid()

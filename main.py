@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from string import digits, punctuation, ascii_uppercase, ascii_lowercase
 from hashlib import sha1
 from requests import get
-
+import logging
 
 class WeakPassword(Exception):
     """Weak password exception"""
@@ -30,8 +30,9 @@ class HasNumberValidator(Validator):
         self.password = password
 
     def is_valid(self):
-        if any([True for char in self.password if char in digits]):
-            return True
+        for char in self.password:
+            if char in digits:
+                return True
         raise WeakPassword('Password dont have number')
 
 
@@ -41,8 +42,9 @@ class HasSpecialCharactersValidator(Validator):
         self.password = password
 
     def is_valid(self):
-        if any([True for char in self.password if char in punctuation]):
-            return True
+        for char in self.password:
+            if char in punctuation:
+                return True
         raise WeakPassword('Password dont have special character')
 
 
@@ -52,8 +54,9 @@ class HasUpperCharactersValidator(Validator):
         self.password = password
 
     def is_valid(self):
-        if any([True for char in self.password if char in ascii_uppercase]):
-            return True
+        for char in self.password:
+            if char in ascii_uppercase:
+                return True
         raise WeakPassword('Password dont have upper character')
 
 
@@ -63,8 +66,9 @@ class HasLowerCharacterValidator(Validator):
         self.password = password
 
     def is_valid(self):
-        if any([True for char in self.password if char in ascii_lowercase]):
-            return True
+        for char in self.password:
+            if char in ascii_lowercase:
+                return True
         raise WeakPassword('Password dont have lower character')
 
 
@@ -90,22 +94,22 @@ class HaveIbeenPwdValidator(Validator):
         """
         self.password = password
         self.url = 'https://api.pwnedpasswords.com/range/'
-# https://api.pwnedpasswords.com/range/67504 self.url+password[:5]
 
     def is_valid(self):
         """
 
-        :return: raises or True
+        :return: raises if password leaked or True when pass the test
         :rtype:
         """
         password = sha1(self.password.encode('utf-8')).hexdigest().upper()
-        response = get(self.url+password[:5], timeout=2).text.splitlines()
+        response = get(self.url+password[:5]).text.splitlines()
         for single_response in response:
             hash_password = single_response.split(':')[0]
             numbers_of_leaks = single_response.split(':')[1]
+
             if hash_password == password[5:]:
                 raise WeakPassword(f'Yours password has been leaked {numbers_of_leaks} times.')
-            return True
+        return True
 
 
 class PasswordValidator(Validator):
@@ -127,9 +131,8 @@ class PasswordValidator(Validator):
             validator = class_name(self.password)
             self.check_rules.append(validator.is_valid())
 
-            if all(self.check_rules):
-                print(self.password)
-                raise StrongPassword('Password is strong')
+        if all(self.check_rules):
+            raise StrongPassword('Password is strong')
 
 
 class LoadPassword:
@@ -150,7 +153,6 @@ class LoadPassword:
             for password in self.passwords:
                 try:
                     password = password.strip('\n')
-                    print(f'Check {password}')
                     PasswordValidator(password).is_valid()
                 except WeakPassword as msg:
                     print(f'{password}  ' + str(msg))
@@ -158,8 +160,13 @@ class LoadPassword:
 
                 except StrongPassword:
                     print(f'Password {password} is strong.')
-                    validate_file.writelines(f'Password: {password} is strong.')
+                    validate_file.writelines(f'Password: {password} is strong.\n')
 
 
 if __name__ == '__main__':
-    HaveIbeenPwdValidator('Adamo').is_valid()
+    LoadPassword()
+    #print(sha1('NewWordOrder2020'.encode('UTF-8')).hexdigest().upper())
+    # try:
+    #     A = HaveIbeenPwdValidator('Haslo123!').is_valid()
+    # except WeakPassword as msg :
+    #     print(msg)
